@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+ <html>
+ <head>
+ <title>PhoneGap</title>
+ <script type="text/javascript" src="phonegap.0.9.6.js"></script>
+ <script type="text/javascript" src="main.js"></script>
+ <script type="text/javascript" src="jquery-1.6.2.js"></script>
+ <script type="text/javascript" src="jquery.mobile-1.0b1.js"></script>     
+ <link rel="stylesheet" href="jquery.mobile-1.0b1.css" type="text/css">
+ <link rel="stylesheet" href="style.css" type="text/css">
+ 
+ <script>
+	
+ 	$(function(){
+ 		//Adds tap (button click) event to button "push"
+ 		$('#push').bind('tap', function(event){
+ 			loadDateListPage();
+ 		});
+ 		
+ 		//Adds tap (button click) event to button "push"
+ 		$('#backToMain').bind('tap', function(event){
+ 			backToMain();
+ 		});
+	});
+	
+</script>
+
+ </head>
+ <body onload="init();" id="stage">
+ 	
+	<div data-role="page" id="mainpage"> 
+          <div data-role="header"> 
+               <h1> Hello World </h1>
+          </div>
+          <div data-role="content">
+               <a href="#dateListPage" id="push" data-role="button" > Push </a>
+          </div>
+     </div>
+
+     <div data-role="page" id="dateListPage"> 
+          <div data-role="header"> 
+               <h1> Date List </h1>
+          </div>
+          <div data-role="content">
+               <a href="#mainpage" data-role="button" id="backToMain"> Back to Main Page </a>
+          </div>
+   		  <p><ul data-role="listview" data-theme="g" id="contentlist"></ul><p>     
+     </div>
+ </body>
+ </html>
