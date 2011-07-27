@@ -365,10 +365,6 @@ PhoneGap.Channel.join(function() {
     // Fire onDeviceReady event once all constructors have run and PhoneGap info has been
     // received from native side, and any user defined initialization channels.
     PhoneGap.Channel.join(function() {
-
-        // Turn off app loading dialog
-        navigator.notification.activityStop();
-
         PhoneGap.onDeviceReady.fire();
 
         // Fire the onresume event, since first one happens before JavaScript is loaded
@@ -928,22 +924,6 @@ PhoneGap.includeJavascript = function(jsfile, successCallback) {
     id.appendChild(el);
 };
 
-/**
- * This class is provided to bridge the gap between the way plugins were setup in 0.9.3 and 0.9.4.  
- * Users should be calling navigator.add.addService() instead of PluginManager.addService().
- * @class
- * @deprecated
- */
-var PluginManager = {
-    addService: function(serviceType, className) {
-        try {
-            navigator.app.addService(serviceType, className);
-        } catch (e) {
-            console.log("Error adding service "+serviceType+": "+e);
-        }
-    }
-};
-
 }
 /*
  * PhoneGap is available under *either* the terms of the modified BSD license *or* the
@@ -1071,6 +1051,8 @@ PhoneGap.addConstructor(function() {
     }
 });
 }
+
+
 /*
  * PhoneGap is available under *either* the terms of the modified BSD license *or* the
  * MIT License (2008). See http://opensource.org/licenses/alphabetical for full text.
@@ -1132,16 +1114,6 @@ App.prototype.clearHistory = function() {
 };
 
 /**
- * Add a class that implements a service.
- *
- * @param serviceType
- * @param className
- */
-App.prototype.addService = function(serviceType, className) {
-	PhoneGap.exec(null, null, "App", "addService", [serviceType, className]);
-};
-
-/**
  * Override the default behavior of the Android back button.
  * If overridden, when the back button is pressed, the "backKeyDown" JavaScript event will be fired.
  *
@@ -1165,6 +1137,8 @@ PhoneGap.addConstructor(function() {
     navigator.app = window.app = new App();
 });
 }
+
+
 /*
  * PhoneGap is available under *either* the terms of the modified BSD license *or* the
  * MIT License (2008). See http://opensource.org/licenses/alphabetical for full text.
@@ -1262,6 +1236,8 @@ PhoneGap.addConstructor(function() {
     }
 });
 }
+
+
 /*
  * PhoneGap is available under *either* the terms of the modified BSD license *or* the
  * MIT License (2008). See http://opensource.org/licenses/alphabetical for full text.
@@ -1452,7 +1428,9 @@ PhoneGap.addConstructor(function(){
 		navigator.device.capture = window.device.capture = new Capture();
 	}
 });
-}/*
+}
+
+/*
  * PhoneGap is available under *either* the terms of the modified BSD license *or* the
  * MIT License (2008). See http://opensource.org/licenses/alphabetical for full text.
  *
@@ -1571,6 +1549,8 @@ PhoneGap.addConstructor(function() {
     }
 });
 }
+
+
 /*
  * PhoneGap is available under *either* the terms of the modified BSD license *or* the
  * MIT License (2008). See http://opensource.org/licenses/alphabetical for full text.
@@ -1594,17 +1574,14 @@ PhoneGap.addResource("contact");
 * @param {Array.<ContactAddress>} addresses array of addresses
 * @param {Array.<ContactField>} ims instant messaging user ids
 * @param {Array.<ContactOrganization>} organizations
-* @param {DOMString} revision date contact was last updated
 * @param {DOMString} birthday contact's birthday
-* @param {DOMString} gender contact's gender
 * @param {DOMString} note user notes about contact
 * @param {Array.<ContactField>} photos
 * @param {Array.<ContactField>} categories
 * @param {Array.<ContactField>} urls contact's web sites
-* @param {DOMString} timezone the contacts time zone
 */
 var Contact = function (id, displayName, name, nickname, phoneNumbers, emails, addresses,
-    ims, organizations, revision, birthday, gender, note, photos, categories, urls, timezone) {
+    ims, organizations, birthday, note, photos, categories, urls) {
     this.id = id || null;
     this.rawId = null;
     this.displayName = displayName || null;
@@ -1615,14 +1592,11 @@ var Contact = function (id, displayName, name, nickname, phoneNumbers, emails, a
     this.addresses = addresses || null; // ContactAddress[]
     this.ims = ims || null; // ContactField[]
     this.organizations = organizations || null; // ContactOrganization[]
-    this.revision = revision || null;
     this.birthday = birthday || null;
-    this.gender = gender || null;
     this.note = note || null;
     this.photos = photos || null; // ContactField[]
     this.categories = categories || null; // ContactField[]
     this.urls = urls || null; // ContactField[]
-    this.timezone = timezone || null;
 };
 
 /**
@@ -1639,11 +1613,10 @@ var ContactError = function() {
  */
 ContactError.UNKNOWN_ERROR = 0;
 ContactError.INVALID_ARGUMENT_ERROR = 1;
-ContactError.NOT_FOUND_ERROR = 2;
-ContactError.TIMEOUT_ERROR = 3;
-ContactError.PENDING_OPERATION_ERROR = 4;
-ContactError.IO_ERROR = 5;
-ContactError.NOT_SUPPORTED_ERROR = 6;
+ContactError.TIMEOUT_ERROR = 2;
+ContactError.PENDING_OPERATION_ERROR = 3;
+ContactError.IO_ERROR = 4;
+ContactError.NOT_SUPPORTED_ERROR = 5;
 ContactError.PERMISSION_DENIED_ERROR = 20;
 
 /**
@@ -1654,7 +1627,7 @@ ContactError.PERMISSION_DENIED_ERROR = 20;
 Contact.prototype.remove = function(successCB, errorCB) {
     if (this.id === null) {
         var errorObj = new ContactError();
-        errorObj.code = ContactError.NOT_FOUND_ERROR;
+        errorObj.code = ContactError.UNKNOWN_ERROR;
         errorCB(errorObj);
     }
     else {
@@ -1770,8 +1743,10 @@ var ContactField = function(type, value, pref) {
 * @param postalCode
 * @param country
 */
-var ContactAddress = function(formatted, streetAddress, locality, region, postalCode, country) {
+var ContactAddress = function(pref, type, formatted, streetAddress, locality, region, postalCode, country) {
 	this.id = null;
+    this.pref = pref || null;
+    this.type = type || null;
     this.formatted = formatted || null;
     this.streetAddress = streetAddress || null;
     this.locality = locality || null;
@@ -1792,8 +1767,10 @@ var ContactAddress = function(formatted, streetAddress, locality, region, postal
 * @param location
 * @param desc
 */
-var ContactOrganization = function(name, dept, title) {
+var ContactOrganization = function(pref, type, name, dept, title) {
 	this.id = null;
+    this.pref = pref || null;
+    this.type = type || null;
     this.name = name || null;
     this.department = dept || null;
     this.title = title || null;
@@ -1816,7 +1793,16 @@ var Contacts = function() {
 * @return array of Contacts matching search criteria
 */
 Contacts.prototype.find = function(fields, successCB, errorCB, options) {
-    PhoneGap.exec(successCB, errorCB, "Contacts", "search", [fields, options]);
+    if (successCB === null) {
+        throw new TypeError("You must specify a success callback for the find command.");
+    }
+    if (fields === null || fields === "undefined" || fields.length === "undefined" || fields.length <= 0) {
+        if (typeof errorCB === "function") {
+            errorCB({"code": ContactError.INVALID_ARGUMENT_ERROR});
+        }
+    } else {
+        PhoneGap.exec(successCB, errorCB, "Contacts", "search", [fields, options]);        
+    }
 };
 
 /**
@@ -1840,7 +1826,7 @@ Contacts.prototype.create = function(properties) {
 /**
 * This function returns and array of contacts.  It is required as we need to convert raw
 * JSON objects into concrete Contact objects.  Currently this method is called after
-* navigator.service.contacts.find but before the find methods success call back.
+* navigator.contacts.find but before the find methods success call back.
 *
 * @param jsonArray an array of JSON Objects that need to be converted to Contact objects.
 * @returns an array of Contact objects
@@ -1849,7 +1835,7 @@ Contacts.prototype.cast = function(pluginResult) {
 	var contacts = [];
 	var i;
 	for (i=0; i<pluginResult.message.length; i++) {
-		contacts.push(navigator.service.contacts.create(pluginResult.message[i]));
+		contacts.push(navigator.contacts.create(pluginResult.message[i]));
 	}
 	pluginResult.message = contacts;
 	return pluginResult;
@@ -1860,26 +1846,23 @@ Contacts.prototype.cast = function(pluginResult) {
  * @constructor
  * @param filter used to match contacts against
  * @param multiple boolean used to determine if more than one contact should be returned
- * @param updatedSince return only contact records that have been updated on or after the given time
  */
-var ContactFindOptions = function(filter, multiple, updatedSince) {
+var ContactFindOptions = function(filter, multiple) {
     this.filter = filter || '';
-    this.multiple = multiple || true;
-    this.updatedSince = updatedSince || '';
+    this.multiple = multiple || false;
 };
 
 /**
  * Add the contact interface into the browser.
  */
 PhoneGap.addConstructor(function() {
-    if(typeof navigator.service === "undefined") {
-        navigator.service = {};
-    }
-    if(typeof navigator.service.contacts === "undefined") {
-        navigator.service.contacts = new Contacts();
+    if(typeof navigator.contacts === "undefined") {
+        navigator.contacts = new Contacts();
     }
 });
 }
+
+
 /*
  * PhoneGap is available under *either* the terms of the modified BSD license *or* the
  * MIT License (2008). See http://opensource.org/licenses/alphabetical for full text.
@@ -1923,6 +1906,8 @@ PhoneGap.addConstructor(function() {
     }
 });
 }
+
+
 /*
  * PhoneGap is available under *either* the terms of the modified BSD license *or* the
  * MIT License (2008). See http://opensource.org/licenses/alphabetical for full text.
@@ -2028,6 +2013,8 @@ PhoneGap.addConstructor(function() {
     }
 });
 }
+
+
 /*
  * PhoneGap is available under *either* the terms of the modified BSD license *or* the
  * MIT License (2008). See http://opensource.org/licenses/alphabetical for full text.
@@ -2120,10 +2107,6 @@ FileMgr.prototype.testDirectoryExists = function(dirName, successCallback, error
 
 FileMgr.prototype.getFreeDiskSpace = function(successCallback, errorCallback) {
     return PhoneGap.exec(successCallback, errorCallback, "File", "getFreeDiskSpace", []);
-};
-
-FileMgr.prototype.writeAsText = function(fileName, data, append, successCallback, errorCallback) {
-    PhoneGap.exec(successCallback, errorCallback, "File", "writeAsText", [fileName, data, append]);
 };
 
 FileMgr.prototype.write = function(fileName, data, position, successCallback, errorCallback) {
@@ -3091,6 +3074,8 @@ PhoneGap.addConstructor(function() {
     if(typeof window.resolveLocalFileSystemURI == "undefined") window.resolveLocalFileSystemURI = pgLocalFileSystem.resolveLocalFileSystemURI;
 });
 }
+
+
 /*
  * PhoneGap is available under *either* the terms of the modified BSD license *or* the
  * MIT License (2008). See http://opensource.org/licenses/alphabetical for full text.
@@ -3176,6 +3161,8 @@ var FileUploadOptions = function(fileKey, fileName, mimeType, params) {
     this.params = params || null;
 };
 }
+
+
 /*
  * PhoneGap is available under *either* the terms of the modified BSD license *or* the
  * MIT License (2008). See http://opensource.org/licenses/alphabetical for full text.
@@ -3374,6 +3361,17 @@ PhoneGap.addConstructor(function() {
     }
 });
 }
+
+
+/*
+ * PhoneGap is available under *either* the terms of the modified BSD license *or* the
+ * MIT License (2008). See http://opensource.org/licenses/alphabetical for full text.
+ *
+ * Copyright (c) 2005-2010, Nitobi Software Inc.
+ * Copyright (c) 2010, IBM Corporation
+ */
+
+
 /*
  * PhoneGap is available under *either* the terms of the modified BSD license *or* the
  * MIT License (2008). See http://opensource.org/licenses/alphabetical for full text.
@@ -3585,6 +3583,8 @@ PhoneGap.Media.onStatus = function(id, msg, value) {
     }
 };
 }
+
+
 /*
  * PhoneGap is available under *either* the terms of the modified BSD license *or* the
  * MIT License (2008). See http://opensource.org/licenses/alphabetical for full text.
@@ -3595,56 +3595,6 @@ PhoneGap.Media.onStatus = function(id, msg, value) {
 
 if (!PhoneGap.hasResource("network")) {
 PhoneGap.addResource("network");
-
-/**
- * This class contains information about any NetworkStatus.
- * @constructor
- */
-var NetworkStatus = function() {
-    //this.code = null;
-    //this.message = "";
-};
-
-NetworkStatus.NOT_REACHABLE = 0;
-NetworkStatus.REACHABLE_VIA_CARRIER_DATA_NETWORK = 1;
-NetworkStatus.REACHABLE_VIA_WIFI_NETWORK = 2;
-
-/**
- * This class provides access to device Network data (reachability).
- * @constructor
- */
-var Network = function() {
-    /**
-     * The last known Network status.
-     * { hostName: string, ipAddress: string,
-        remoteHostStatus: int(0/1/2), internetConnectionStatus: int(0/1/2), localWiFiConnectionStatus: int (0/2) }
-     */
-    this.lastReachability = null;
-};
-
-/**
- * Called by the geolocation framework when the reachability status has changed.
- * @param {Reachibility} reachability The current reachability status.
- */
-// TODO: Callback from native code not implemented for Android
-Network.prototype.updateReachability = function(reachability) {
-    this.lastReachability = reachability;
-};
-
-/**
- * Determine if a URI is reachable over the network.
-
- * @param {Object} uri
- * @param {Function} callback
- * @param {Object} options  (isIpAddress:boolean)
- */
-Network.prototype.isReachable = function(uri, callback, options) {
-    var isIpAddress = false;
-    if (options && options.isIpAddress) {
-        isIpAddress = options.isIpAddress;
-    }
-    PhoneGap.exec(callback, null, "Network Status", "isReachable", [uri, isIpAddress]);
-};
 
 /**
  * This class contains information about the current network Connection.
@@ -3710,13 +3660,15 @@ Connection.prototype.getInfo = function(successCallback, errorCallback) {
 
 PhoneGap.addConstructor(function() {
     if (typeof navigator.network === "undefined") {
-        navigator.network = new Network();
+        navigator.network = new Object();
     }
     if (typeof navigator.network.connection === "undefined") {
         navigator.network.connection = new Connection();
     }
 });
 }
+
+
 /*
  * PhoneGap is available under *either* the terms of the modified BSD license *or* the
  * MIT License (2008). See http://opensource.org/licenses/alphabetical for full text.
@@ -3839,6 +3791,8 @@ PhoneGap.addConstructor(function() {
     }
 });
 }
+
+
 /*
  * PhoneGap is available under *either* the terms of the modified BSD license *or* the
  * MIT License (2008). See http://opensource.org/licenses/alphabetical for full text.
@@ -3928,6 +3882,8 @@ PositionError.PERMISSION_DENIED = 1;
 PositionError.POSITION_UNAVAILABLE = 2;
 PositionError.TIMEOUT = 3;
 }
+
+
 /*
  * PhoneGap is available under *either* the terms of the modified BSD license *or* the
  * MIT License (2008). See http://opensource.org/licenses/alphabetical for full text.
@@ -4356,3 +4312,5 @@ PhoneGap.addConstructor(function() {
     }
 });
 }
+
+
