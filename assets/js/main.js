@@ -85,7 +85,6 @@ function populateDateList(tx, results)
 function backToMain()
 {
 	document.addEventListener("deviceready", nullEventHandler, false);
-	db = window.openDatabase("HelloPhoneGap", "1.0", "PhoneGap dateList", 200000);
 }
 
 //*****************************************************************************
@@ -107,7 +106,7 @@ function onDeviceReady()
 	{ 
 		if (!window.openDatabase)//try file I/O here
 		{ 
-			alert('not supported'); 
+			console.log('not supported'); 
 		} 
 		else //database is supported 
 		{ 
